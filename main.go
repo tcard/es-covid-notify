@@ -315,7 +315,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	lastPct := lastReport.TotalVacced.Pct()
 	nextPct := nextReport.TotalVacced.Pct()
 
-	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 30))
+	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 20))
 
 	fmt.Fprintf(&msg, "\nPauta completa: %0.2f %% (%+0.1f k; %+0.2f %%)\n",
 		nextPct.Full,
