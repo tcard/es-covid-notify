@@ -453,8 +453,8 @@ func intPct(n, base int) float64 {
 
 func progressBar(strong, weak float64, width int) string {
 	s := float64(width) / 100.0
-	strongCells := int(math.Ceil(strong * s))
-	weakCells := int(math.Ceil(weak * s))
+	strongCells := int(math.Round(strong * s))
+	weakCells := int(math.Round(weak * s))
 	if weakCells < 0 || strongCells+weakCells > width {
 		weakCells = 0
 	}
