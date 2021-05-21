@@ -251,7 +251,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 	lastPct := lastReport.TotalVacced.Pct()
 	nextPct := nextReport.TotalVacced.Pct()
 
-	fmt.Fprintf(&msg, "<pre>%s</pre>\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 40))
+	fmt.Fprintf(&msg, "<pre>%s</pre>\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 25))
 
 	fmt.Fprintf(&msg, "\nPauta completa: <strong>%0.2f %%</strong> (<strong>%+0.1f k;</strong> %+0.2f %%)\n",
 		nextPct.Full,
