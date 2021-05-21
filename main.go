@@ -294,8 +294,8 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		fmt.Fprintf(&msg, "<pre>%s %s (%0.2f %% / %0.2f %%)</pre>\n",
 			c.title,
 			progressBar(pct.Full, pct.Single-pct.Full, 20),
-			pct.Single,
 			pct.Full,
+			pct.Single,
 		)
 	}
 
