@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"regexp"
@@ -314,7 +315,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	lastPct := lastReport.TotalVacced.Pct()
 	nextPct := nextReport.TotalVacced.Pct()
 
-	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 20))
+	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 30))
 
 	fmt.Fprintf(&msg, "\nPauta completa: %0.2f %% (%+0.1f k; %+0.2f %%)\n",
 		nextPct.Full,
@@ -452,8 +453,8 @@ func intPct(n, base int) float64 {
 
 func progressBar(strong, weak float64, width int) string {
 	s := float64(width) / 100.0
-	strongCells := int(strong * s)
-	weakCells := int(weak * s)
+	strongCells := int(math.Ceil(strong * s))
+	weakCells := int(math.Ceil(weak * s))
 	if weakCells < 0 || strongCells+weakCells > width {
 		weakCells = 0
 	}
