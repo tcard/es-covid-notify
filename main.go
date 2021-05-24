@@ -31,6 +31,7 @@ func main() {
 	err := scrap()
 	if err != nil {
 		log.Printf("Error scraping: %s", err)
+		os.Exit(1)
 	}
 }
 
