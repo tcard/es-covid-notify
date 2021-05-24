@@ -227,6 +227,24 @@ type VaccedByAge struct {
 	_16_17  Vacced
 }
 
+func (v VaccedByAge) Total() Vacced {
+	var t Vacced
+	for _, v := range []Vacced{
+		v._80Plus,
+		v._70_79,
+		v._60_69,
+		v._50_59,
+		v._25_49,
+		v._18_24,
+		v._16_17,
+	} {
+		t.PopSize += v.PopSize
+		t.Single += v.Single
+		t.Full += v.Full
+	}
+	return t
+}
+
 type Vacced struct {
 	PopSize int
 	Single  int
@@ -252,7 +270,11 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 	lastPct := lastReport.TotalVacced.Pct()
 	nextPct := nextReport.TotalVacced.Pct()
 
-	fmt.Fprintf(&msg, "<pre>%s</pre>\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 25))
+	fmt.Fprintf(&msg, "<pre>%s</pre>\n", progressBar(
+		25,
+		nextPct.Full,
+		nextPct.Single-nextPct.Full,
+	))
 	fmt.Fprintf(&msg, "<strong>💉💉%0.2f %% | 💉 %0.2f %%</strong>\n",
 		nextPct.Full,
 		nextPct.Single,
@@ -300,7 +322,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		pct := c.v.Pct()
 		fmt.Fprintf(&msg, "<pre>%s %s (%0.2f %% / %0.2f %%)</pre>\n",
 			c.title,
-			progressBar(pct.Full, pct.Single-pct.Full, 20),
+			progressBar(20, pct.Full, pct.Single-pct.Full),
 			pct.Full,
 			pct.Single,
 		)
@@ -322,7 +344,11 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	lastPct := lastReport.TotalVacced.Pct()
 	nextPct := nextReport.TotalVacced.Pct()
 
-	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 20))
+	fmt.Fprintf(&msg, "%s\n", progressBar(
+		20,
+		nextPct.Full,
+		nextPct.Single-nextPct.Full,
+	))
 	fmt.Fprintf(&msg, "💉💉 %0.2f %% | 💉 %0.2f %%\n",
 		nextPct.Full,
 		nextPct.Single,
@@ -378,7 +404,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	} {
 		pct := c.v.Pct()
 		fmt.Fprintf(&msg, "%s %s (%0.0f/%0.0f %%)\n",
-			progressBar(pct.Full, pct.Single-pct.Full, 10),
+			progressBar(10, pct.Full, pct.Single-pct.Full),
 			c.title,
 			pct.Full,
 			pct.Single,
@@ -466,20 +492,30 @@ func intPct(n, base int) float64 {
 	return float64(n) * 100 / float64(base)
 }
 
-func progressBar(strong, weak float64, width int) string {
+func progressBar(width int, pcts ...float64) string {
 	s := float64(width) / 100.0
-	strongCells := int(math.Round(strong * s))
-	weakCells := int(math.Round(weak * s))
-	if weakCells < 0 || strongCells+weakCells > width {
-		weakCells = 0
+
+	var bar strings.Builder
+	var cells int
+
+	for i, pct := range pcts {
+		pctCells := int(math.Round(pct * s))
+
+		cells += pctCells
+		if cells > width {
+			pctCells -= cells - width
+			cells = width
+		}
+
+		c := "▓"
+		if i%2 == 1 {
+			c = "▒"
+		}
+		bar.WriteString(strings.Repeat(c, pctCells))
 	}
-	rest := width - strongCells - weakCells
-	if rest < 0 {
-		rest = 0
-	}
-	return fmt.Sprintf("%s%s%s",
-		strings.Repeat("▓", strongCells),
-		strings.Repeat("▒", weakCells),
-		strings.Repeat("░", rest),
-	)
+
+	rest := width - cells
+	bar.WriteString(strings.Repeat("░", rest))
+
+	return bar.String()
 }
