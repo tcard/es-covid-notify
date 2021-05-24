@@ -402,6 +402,11 @@ func sendTelegramMessage(msg interface{}) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	if telegramAPIToken == "" {
+		fmt.Println("------\n" + msg.(map[string]interface{})["text"].(string) + "\n------")
+		return nil
+	}
+
 	body, err := json.Marshal(msg)
 	if err != nil {
 		panic(err)
