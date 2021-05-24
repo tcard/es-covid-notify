@@ -317,7 +317,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		{"50-59", nextReport.VaccedByAge._50_59},
 		{"25-49", nextReport.VaccedByAge._25_49},
 		{"18-24", nextReport.VaccedByAge._18_24},
-		{"16-27", nextReport.VaccedByAge._16_17},
+		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
 		pct := c.v.Pct()
 		fmt.Fprintf(&msg, "<pre>%s %s (%0.2f %% / %0.2f %%)</pre>\n",
