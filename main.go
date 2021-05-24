@@ -252,31 +252,37 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 	nextPct := nextReport.TotalVacced.Pct()
 
 	fmt.Fprintf(&msg, "<pre>%s</pre>\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 25))
-
-	fmt.Fprintf(&msg, "\nPauta completa: <strong>%0.2f %%</strong> (<strong>%+0.1f k;</strong> %+0.2f %%)\n",
+	fmt.Fprintf(&msg, "<strong>💉💉%0.2f %% | 💉 %0.2f %%</strong>\n",
 		nextPct.Full,
-		float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full)/1000,
-		nextPct.Full-lastPct.Full,
-	)
-	fmt.Fprintf(&msg, "Al menos una dosis: %0.2f %% (%+0.1f k; %+0.2f %%)\n",
 		nextPct.Single,
-		float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single)/1000,
-		nextPct.Single-lastPct.Single,
 	)
 
-	fmt.Fprintf(&msg, "\nDosis:\n\n")
+	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "Entregadas: %0.3f M (%+0.1f k)\n",
-		float64(nextReport.Doses.Available)/1000000,
-		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
-	)
-	fmt.Fprintf(&msg, "Puestas: %0.3f M (<strong>%+0.1f k;</strong> %0.2f %% de entregadas)\n",
-		float64(nextReport.Doses.Given)/1000000,
+	fmt.Fprintf(&msg, "<strong>%+0.1f k</strong> dosis puestas (total: %0.3f M; %0.2f %% de entregadas)\n",
 		float64(nextReport.Doses.Given-lastReport.Doses.Given)/1000,
+		float64(nextReport.Doses.Given)/1000000,
 		intPct(nextReport.Doses.Given, nextReport.Doses.Available),
 	)
+	fmt.Fprintf(&msg, "%+0.1f k entregadas (total: %0.3f M)\n",
+		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
+		float64(nextReport.Doses.Available)/1000000,
+	)
 
-	fmt.Fprintf(&msg, "\nPor grupos de edad (una dosis / completa):\n\n")
+	fmt.Fprintln(&msg)
+
+	fmt.Fprintf(&msg, "Pauta completa: <strong>%+0.1f k</strong>; %+0.2f %% (total: <strong>%0.2f %%</strong>)\n",
+		float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full)/1000,
+		nextPct.Full-lastPct.Full,
+		nextPct.Full,
+	)
+	fmt.Fprintf(&msg, "Al menos una dosis: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
+		float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single)/1000,
+		nextPct.Single-lastPct.Single,
+		nextPct.Single,
+	)
+
+	fmt.Fprintf(&msg, "\n%% por grupos de edad (completa / al menos una dosis):\n\n")
 
 	for _, c := range []struct {
 		title string
@@ -316,28 +322,31 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	nextPct := nextReport.TotalVacced.Pct()
 
 	fmt.Fprintf(&msg, "%s\n", progressBar(nextPct.Full, nextPct.Single-nextPct.Full, 20))
-
-	fmt.Fprintf(&msg, "\nPauta completa: %0.2f %% (%+0.1f k; %+0.2f %%)\n",
+	fmt.Fprintf(&msg, "💉💉 %0.2f %% | 💉 %0.2f %%\n",
 		nextPct.Full,
+		nextPct.Single,
+	)
+
+	fmt.Fprintln(&msg)
+
+	fmt.Fprintf(&msg, "%+0.1f k puestas (total: %0.3f M; %0.2f %% de entregadas)\n",
+		float64(nextReport.Doses.Given-lastReport.Doses.Given)/1000,
+		float64(nextReport.Doses.Given)/1000000,
+		intPct(nextReport.Doses.Given, nextReport.Doses.Available),
+	)
+	fmt.Fprintf(&msg, "%+0.1f k entregadas (total: %0.3f M)\n",
+		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
+		float64(nextReport.Doses.Available)/1000000,
+	)
+	fmt.Fprintf(&msg, "Pauta completa: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
 		float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full)/1000,
 		nextPct.Full-lastPct.Full,
+		nextPct.Full,
 	)
-	fmt.Fprintf(&msg, "Al menos una dosis: %0.2f %% (%+0.1f k; %+0.2f %%)\n",
-		nextPct.Single,
+	fmt.Fprintf(&msg, "Al menos una: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
 		float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single)/1000,
 		nextPct.Single-lastPct.Single,
-	)
-
-	fmt.Fprintf(&msg, "\nDosis:\n\n")
-
-	fmt.Fprintf(&msg, "Entregadas: %0.3f M (%+0.1f k)\n",
-		float64(nextReport.Doses.Available)/1000000,
-		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
-	)
-	fmt.Fprintf(&msg, "Puestas: %0.3f M (%+0.1f k; %0.2f %% de entregadas)\n",
-		float64(nextReport.Doses.Given)/1000000,
-		float64(nextReport.Doses.Given-lastReport.Doses.Given)/1000,
-		intPct(nextReport.Doses.Given, nextReport.Doses.Available),
+		nextPct.Single,
 	)
 
 	// TODO: Actually post to Twitter. Setting up a Twitter bot is so annoying...
@@ -352,7 +361,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 
 	msg = strings.Builder{}
 
-	fmt.Fprintf(&msg, "%% por edad:\n\n")
+	fmt.Fprintf(&msg, "%% por edad (💉💉/💉):\n\n")
 
 	for _, c := range []struct {
 		title string
