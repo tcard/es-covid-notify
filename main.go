@@ -188,7 +188,7 @@ func extractReport(doc *ods.Doc, report *vaccReport) error {
 
 	assert(singleTable[0][23] == "Total Población INE Población a Vacunar (1)")
 	assert(fullTable[0][23] == "Total Población INE Población a Vacunar (1)")
-	report.TotalVacced.PopSize = parseInt(singleTable[21][23])
+	report.TotalVacced.PopSize = 47_431_256 // INE 2020
 
 	for i, group := range []*Vacced{
 		&report.VaccedByAge._80Plus,
