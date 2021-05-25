@@ -27,9 +27,8 @@ import (
 )
 
 var (
-	telegramAPIToken             = os.Getenv("TELEGRAM_API_TOKEN")
-	updatesTelegramChatID        = os.Getenv("UPDATES_TELEGRAM_CHAT_ID")
-	twitterUpdatesTelegramChatID = os.Getenv("TWITTER_UPDATES_TELEGRAM_CHAT_ID")
+	telegramAPIToken      = os.Getenv("TELEGRAM_API_TOKEN")
+	updatesTelegramChatID = os.Getenv("UPDATES_TELEGRAM_CHAT_ID")
 
 	twitterConsumerKey    = os.Getenv("TWITTER_CONSUMER_KEY")
 	twitterConsumerSecret = os.Getenv("TWITTER_CONSUMER_SECRET")
@@ -425,13 +424,8 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 func tweetThread(msgs ...string) error {
 	var lastTweet *twitter.Tweet
 	for i, msg := range msgs {
-		// Best effort: send to private Telegram too.
-		_ = sendTelegramMessage(map[string]interface{}{
-			"chat_id": twitterUpdatesTelegramChatID,
-			"text":    msg,
-		})
-
 		if twitterClient == nil {
+			fmt.Println("tweet: ------\n" + msg + "\n------")
 			continue
 		}
 
@@ -460,7 +454,7 @@ func sendTelegramMessage(msg interface{}) error {
 	defer cancel()
 
 	if telegramAPIToken == "" {
-		fmt.Println("------\n" + msg.(map[string]interface{})["text"].(string) + "\n------")
+		fmt.Println("telegram: ------\n" + msg.(map[string]interface{})["text"].(string) + "\n------")
 		return nil
 	}
 
