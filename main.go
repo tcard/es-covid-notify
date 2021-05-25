@@ -371,7 +371,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		fmtFloat(float64(nextReport.Doses.Given), 3),
 		fmtPct(intPct(nextReport.Doses.Given, nextReport.Doses.Available), 2),
 	)
-	fmt.Fprintf(&msg, "%s k entregadas (total: %s)\n",
+	fmt.Fprintf(&msg, "%s entregadas (total: %s)\n",
 		fmtIncr(fmtFloat(float64(nextReport.Doses.Available-lastReport.Doses.Available), 1)),
 		fmtFloat(float64(nextReport.Doses.Available), 3),
 	)
