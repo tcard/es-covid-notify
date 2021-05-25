@@ -411,16 +411,11 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	}
 
 	tweets = append(tweets, msg.String())
-	msg = strings.Builder{}
 
-	fmt.Fprintln(&msg, `Informe completo disponible en la web del Ministerio de Sanidad: https://www.mscbs.gob.es/profesionales/saludPublica/ccayes/alertasActual/nCov/vacunaCovid19.htm`)
-
-	tweets = append(tweets, msg.String())
 	err := tweetThread(tweets...)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
