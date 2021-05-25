@@ -359,7 +359,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		nextPct.Full,
 		nextPct.Single-nextPct.Full,
 	))
-	fmt.Fprintf(&msg, "💉💉 %s| 💉 %s\n",
+	fmt.Fprintf(&msg, "💉💉 %s | 💉 %s\n",
 		fmtPct(nextPct.Full, 2),
 		fmtPct(nextPct.Single, 2),
 	)
