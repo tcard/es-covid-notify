@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"github.com/knieriem/odf/ods"
 )
 
@@ -25,6 +27,11 @@ var (
 	telegramAPIToken             = os.Getenv("TELEGRAM_API_TOKEN")
 	updatesTelegramChatID        = os.Getenv("UPDATES_TELEGRAM_CHAT_ID")
 	twitterUpdatesTelegramChatID = os.Getenv("TWITTER_UPDATES_TELEGRAM_CHAT_ID")
+
+	twitterConsumerKey    = os.Getenv("TWITTER_CONSUMER_KEY")
+	twitterConsumerSecret = os.Getenv("TWITTER_CONSUMER_SECRET")
+	twitterAccessToken    = os.Getenv("TWITTER_ACCESS_TOKEN")
+	twitterAccessSecret   = os.Getenv("TWITTER_ACCESS_SECRET")
 )
 
 func main() {
@@ -339,6 +346,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 }
 
 func postToTwitter(lastReport, nextReport *vaccReport) error {
+	var tweets []string
 	var msg strings.Builder
 
 	lastPct := lastReport.TotalVacced.Pct()
@@ -376,16 +384,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		nextPct.Single,
 	)
 
-	// TODO: Actually post to Twitter. Setting up a Twitter bot is so annoying...
-
-	err := sendTelegramMessage(map[string]interface{}{
-		"chat_id": twitterUpdatesTelegramChatID,
-		"text":    msg.String(),
-	})
-	if err != nil {
-		return err
-	}
-
+	tweets = append(tweets, msg.String())
 	msg = strings.Builder{}
 
 	fmt.Fprintf(&msg, "%% por edad (💉💉/💉):\n\n")
@@ -411,26 +410,46 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		)
 	}
 
-	err = sendTelegramMessage(map[string]interface{}{
-		"chat_id": twitterUpdatesTelegramChatID,
-		"text":    msg.String(),
-	})
-	if err != nil {
-		return err
-	}
-
+	tweets = append(tweets, msg.String())
 	msg = strings.Builder{}
 
 	fmt.Fprintln(&msg, `Informe completo disponible en la web del Ministerio de Sanidad: https://www.mscbs.gob.es/profesionales/saludPublica/ccayes/alertasActual/nCov/vacunaCovid19.htm`)
 
-	err = sendTelegramMessage(map[string]interface{}{
-		"chat_id": twitterUpdatesTelegramChatID,
-		"text":    msg.String(),
-	})
+	tweets = append(tweets, msg.String())
+	err := tweetThread(tweets...)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func tweetThread(msgs ...string) error {
+	var lastTweet *twitter.Tweet
+	for i, msg := range msgs {
+		var params *twitter.StatusUpdateParams
+		if lastTweet != nil {
+			params = &twitter.StatusUpdateParams{
+				InReplyToStatusID: lastTweet.ID,
+			}
+		}
+		t, resp, err := twitterClient.Statuses.Update(msg, params)
+		if err != nil {
+			return fmt.Errorf("posting tweet #%d: %w", i, err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("posting tweet #%d: status %d; body: %s", i, resp.StatusCode, body)
+		}
+		lastTweet = t
+
+		// Best effort: send to private Telegram too.
+		_ = sendTelegramMessage(map[string]interface{}{
+			"chat_id": twitterUpdatesTelegramChatID,
+			"text":    msg,
+		})
+	}
 	return nil
 }
 
@@ -519,3 +538,15 @@ func progressBar(width int, pcts ...float64) string {
 
 	return bar.String()
 }
+
+var twitterClient = func() *twitter.Client {
+	return twitter.NewClient(
+		oauth1.NewConfig(
+			twitterConsumerKey,
+			twitterConsumerSecret,
+		).Client(
+			oauth1.NoContext,
+			oauth1.NewToken(twitterAccessToken, twitterAccessSecret),
+		),
+	)
+}()
