@@ -427,6 +427,16 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 func tweetThread(msgs ...string) error {
 	var lastTweet *twitter.Tweet
 	for i, msg := range msgs {
+		// Best effort: send to private Telegram too.
+		_ = sendTelegramMessage(map[string]interface{}{
+			"chat_id": twitterUpdatesTelegramChatID,
+			"text":    msg,
+		})
+
+		if twitterClient == nil {
+			continue
+		}
+
 		var params *twitter.StatusUpdateParams
 		if lastTweet != nil {
 			params = &twitter.StatusUpdateParams{
@@ -443,12 +453,6 @@ func tweetThread(msgs ...string) error {
 			return fmt.Errorf("posting tweet #%d: status %d; body: %s", i, resp.StatusCode, body)
 		}
 		lastTweet = t
-
-		// Best effort: send to private Telegram too.
-		_ = sendTelegramMessage(map[string]interface{}{
-			"chat_id": twitterUpdatesTelegramChatID,
-			"text":    msg,
-		})
 	}
 	return nil
 }
@@ -540,6 +544,9 @@ func progressBar(width int, pcts ...float64) string {
 }
 
 var twitterClient = func() *twitter.Client {
+	if twitterConsumerKey == "" {
+		return nil
+	}
 	return twitter.NewClient(
 		oauth1.NewConfig(
 			twitterConsumerKey,
