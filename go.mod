@@ -7,4 +7,5 @@ require (
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/knieriem/odf v0.1.0
 	github.com/stretchr/testify v1.4.0 // indirect
+	golang.org/x/text v0.3.6
 )

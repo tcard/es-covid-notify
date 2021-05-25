@@ -21,6 +21,9 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/knieriem/odf/ods"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
+	"golang.org/x/text/number"
 )
 
 var (
@@ -282,34 +285,34 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		nextPct.Full,
 		nextPct.Single-nextPct.Full,
 	))
-	fmt.Fprintf(&msg, "<strong>💉💉 %0.2f %% | 💉 %0.2f %%</strong>\n",
-		nextPct.Full,
-		nextPct.Single,
+	fmt.Fprintf(&msg, "<strong>💉💉 %s | 💉 %s</strong>\n",
+		fmtPct(nextPct.Full, 2),
+		fmtPct(nextPct.Single, 2),
 	)
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "<strong>%+0.1f k</strong> dosis puestas (total: %0.3f M; %0.2f %% de entregadas)\n",
-		float64(nextReport.Doses.Given-lastReport.Doses.Given)/1000,
-		float64(nextReport.Doses.Given)/1000000,
-		intPct(nextReport.Doses.Given, nextReport.Doses.Available),
+	fmt.Fprintf(&msg, "<strong>%s</strong> dosis puestas (total: %s; %s de entregadas)\n",
+		fmtIncr(fmtFloat(float64(nextReport.Doses.Given-lastReport.Doses.Given), 1)),
+		fmtFloat(float64(nextReport.Doses.Given), 3),
+		fmtPct(intPct(nextReport.Doses.Given, nextReport.Doses.Available), 2),
 	)
-	fmt.Fprintf(&msg, "%+0.1f k entregadas (total: %0.3f M)\n",
-		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
-		float64(nextReport.Doses.Available)/1000000,
+	fmt.Fprintf(&msg, "%s entregadas (total: %s)\n",
+		fmtIncr(fmtFloat(float64(nextReport.Doses.Available-lastReport.Doses.Available), 1)),
+		fmtFloat(float64(nextReport.Doses.Available), 3),
 	)
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "Pauta completa: <strong>%+0.1f k</strong>; %+0.2f %% (total: <strong>%0.2f %%</strong>)\n",
-		float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full)/1000,
-		nextPct.Full-lastPct.Full,
-		nextPct.Full,
+	fmt.Fprintf(&msg, "Pauta completa: <strong>%s</strong>; %s (total: <strong>%s</strong>)\n",
+		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
+		fmtIncr(fmtFloat(nextPct.Full-lastPct.Full, 2)),
+		fmtPct(nextPct.Full, 2),
 	)
-	fmt.Fprintf(&msg, "Al menos una dosis: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
-		float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single)/1000,
-		nextPct.Single-lastPct.Single,
-		nextPct.Single,
+	fmt.Fprintf(&msg, "Al menos una dosis: %s; %s (total: %s)\n",
+		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
+		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
+		fmtPct(nextPct.Single, 2),
 	)
 
 	fmt.Fprintf(&msg, "\n%% por grupos de edad (completa / al menos una dosis):\n\n")
@@ -327,11 +330,11 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
 		pct := c.v.Pct()
-		fmt.Fprintf(&msg, "<pre>%s %s (%0.2f %% / %0.2f %%)</pre>\n",
+		fmt.Fprintf(&msg, "<pre>%s %s (%s / %s)</pre>\n",
 			c.title,
 			progressBar(20, pct.Full, pct.Single-pct.Full),
-			pct.Full,
-			pct.Single,
+			fmtPct(pct.Full, 2),
+			fmtPct(pct.Single, 2),
 		)
 	}
 
@@ -357,31 +360,31 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		nextPct.Full,
 		nextPct.Single-nextPct.Full,
 	))
-	fmt.Fprintf(&msg, "💉💉 %0.2f %% | 💉 %0.2f %%\n",
-		nextPct.Full,
-		nextPct.Single,
+	fmt.Fprintf(&msg, "💉💉 %s| 💉 %s\n",
+		fmtPct(nextPct.Full, 2),
+		fmtPct(nextPct.Single, 2),
 	)
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "%+0.1f k puestas (total: %0.3f M; %0.2f %% de entregadas)\n",
-		float64(nextReport.Doses.Given-lastReport.Doses.Given)/1000,
-		float64(nextReport.Doses.Given)/1000000,
-		intPct(nextReport.Doses.Given, nextReport.Doses.Available),
+	fmt.Fprintf(&msg, "%s puestas (total: %s; %s de entregadas)\n",
+		fmtIncr(fmtFloat(float64(nextReport.Doses.Given-lastReport.Doses.Given), 1)),
+		fmtFloat(float64(nextReport.Doses.Given), 3),
+		fmtPct(intPct(nextReport.Doses.Given, nextReport.Doses.Available), 2),
 	)
-	fmt.Fprintf(&msg, "%+0.1f k entregadas (total: %0.3f M)\n",
-		float64(nextReport.Doses.Available-lastReport.Doses.Available)/1000,
-		float64(nextReport.Doses.Available)/1000000,
+	fmt.Fprintf(&msg, "%s k entregadas (total: %s)\n",
+		fmtIncr(fmtFloat(float64(nextReport.Doses.Available-lastReport.Doses.Available), 1)),
+		fmtFloat(float64(nextReport.Doses.Available), 3),
 	)
-	fmt.Fprintf(&msg, "Pauta completa: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
-		float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full)/1000,
-		nextPct.Full-lastPct.Full,
-		nextPct.Full,
+	fmt.Fprintf(&msg, "Pauta completa: %s; %s (total: %s)\n",
+		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
+		fmtIncr(fmtFloat(nextPct.Full-lastPct.Full, 2)),
+		fmtPct(nextPct.Full, 2),
 	)
-	fmt.Fprintf(&msg, "Al menos una: %+0.1f k; %+0.2f %% (total: %0.2f %%)\n",
-		float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single)/1000,
-		nextPct.Single-lastPct.Single,
-		nextPct.Single,
+	fmt.Fprintf(&msg, "Al menos una: %s k; %s %% (total: %s %%)\n",
+		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
+		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
+		fmtPct(nextPct.Single, 2),
 	)
 
 	tweets = append(tweets, msg.String())
@@ -402,11 +405,11 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
 		pct := c.v.Pct()
-		fmt.Fprintf(&msg, "%s %s (%0.0f/%0.0f %%)\n",
+		fmt.Fprintf(&msg, "%s %s (%s/%s %%)\n",
 			progressBar(10, pct.Full, pct.Single-pct.Full),
 			c.title,
-			pct.Full,
-			pct.Single,
+			fmtFloat(pct.Full, 0),
+			fmtFloat(pct.Single, 0),
 		)
 	}
 
@@ -551,4 +554,34 @@ var twitterClient = func() *twitter.Client {
 			oauth1.NewToken(twitterAccessToken, twitterAccessSecret),
 		),
 	)
+}()
+
+var fmtFloat, fmtPct, fmtIncr = func() (
+	func(float64, int) string,
+	func(float64, int) string,
+	func(string) string,
+) {
+	p := message.NewPrinter(language.Spanish)
+	units := [...]string{"", " k", " M", " G"}
+
+	fmtFloat := func(f float64, maxFrac int) string {
+		var i int
+		for i = 0; f >= 1000 && i < len(units); i++ {
+			f /= 1000
+		}
+		return p.Sprintf("%v%s", number.Decimal(f, number.MaxFractionDigits(maxFrac)), units[i])
+	}
+
+	fmtPct := func(pct float64, maxFrac int) string {
+		return p.Sprint(number.Percent(pct/100, number.MaxFractionDigits(maxFrac)))
+	}
+
+	fmtIncr := func(s string) string {
+		if s[0] != '-' {
+			s = "+" + s
+		}
+		return s
+	}
+
+	return fmtFloat, fmtPct, fmtIncr
 }()
