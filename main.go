@@ -282,7 +282,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		nextPct.Full,
 		nextPct.Single-nextPct.Full,
 	))
-	fmt.Fprintf(&msg, "<strong>💉💉%0.2f %% | 💉 %0.2f %%</strong>\n",
+	fmt.Fprintf(&msg, "<strong>💉💉 %0.2f %% | 💉 %0.2f %%</strong>\n",
 		nextPct.Full,
 		nextPct.Single,
 	)
