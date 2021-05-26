@@ -380,7 +380,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		fmtIncr(fmtFloat(nextPct.Full-lastPct.Full, 2)),
 		fmtPct(nextPct.Full, 2),
 	)
-	fmt.Fprintf(&msg, "Al menos una: %s; %s %% (total: %s %%)\n",
+	fmt.Fprintf(&msg, "Al menos una: %s; %s (total: %s)\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
 		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
 		fmtPct(nextPct.Single, 2),
