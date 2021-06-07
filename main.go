@@ -314,7 +314,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 
 	fmt.Fprintf(&msg, "Pauta completa: <strong>%s</strong>; %s (total: <strong>%s</strong>)\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
-		fmtIncr(fmtFloat(nextPct.Full-lastPct.Full, 2)),
+		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
 		fmtPct(nextPct.Full, 2),
 	)
 	fmt.Fprintf(&msg, "Al menos una dosis: %s; %s (total: %s)\n",
@@ -387,7 +387,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	)
 	fmt.Fprintf(&msg, "Pauta completa: %s; %s (total: %s)\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
-		fmtIncr(fmtFloat(nextPct.Full-lastPct.Full, 2)),
+		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
 		fmtPct(nextPct.Full, 2),
 	)
 	fmt.Fprintf(&msg, "Al menos una: %s; %s (total: %s)\n",
