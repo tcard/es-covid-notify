@@ -81,10 +81,9 @@ func scrap() (err error) {
 	for _, c := range []struct {
 		contents []byte
 		report   *vaccReport
-		old      bool
 	}{
-		{lastContents, &lastReport, false},
-		{nextContents, &nextReport, false},
+		{lastContents, &lastReport},
+		{nextContents, &nextReport},
 	} {
 		odfile, err := ods.NewReader(bytes.NewReader(c.contents), int64(len(c.contents)))
 		if err != nil {
@@ -95,7 +94,7 @@ func scrap() (err error) {
 		if err != nil {
 			return fmt.Errorf("parsing ODS: %w", err)
 		}
-		extractReport(&doc, c.report, c.old)
+		extractReport(&doc, c.report)
 	}
 
 	log.Println("Handling update:", nextName)
@@ -173,7 +172,7 @@ func fetchReport(name string) ([]byte, bool, error) {
 	return contents, true, nil
 }
 
-func extractReport(doc *ods.Doc, report *vaccReport, old bool) error {
+func extractReport(doc *ods.Doc, report *vaccReport) error {
 	{
 		totalTable := doc.Table[0].Strings()
 
@@ -194,43 +193,32 @@ func extractReport(doc *ods.Doc, report *vaccReport, old bool) error {
 	}
 
 	tableOffset := 0
-	if old {
-		tableOffset = 1
-	}
 	singleTable := doc.Table[2+tableOffset].Strings()
 	fullTable := doc.Table[3+tableOffset].Strings()
 
 	totalPopCol := 18
-	if old {
-		totalPopCol = 23
-	}
 	assert(singleTable[0][totalPopCol] == "Total Población INE Población a Vacunar (1)")
 	assert(fullTable[0][totalPopCol] == "Total Población INE Población a Vacunar (1)")
 	report.TotalVacced.PopSize = 47_431_256 // INE 2020
 
-	if !old {
-		for i, group := range []struct {
-			v       *Vacced
-			popSize int
-		}{
-			{&report.VaccedByAge._80Plus, 2_834_024},
-			{&report.VaccedByAge._70_79, 3_960_045},
-			{&report.VaccedByAge._60_69, 5_336_986},
-			{&report.VaccedByAge._50_59, 7_033_306},
-			{&report.VaccedByAge._40_49, 7_891_737},
-			{&report.VaccedByAge._25_39, 8_814_376},
-			{&report.VaccedByAge._18_24, 3_310_299},
-			{&report.VaccedByAge._16_17, 949_049},
-		} {
-			width := 2
-			if old {
-				width = 3
-			}
-			i := i * width
-			group.v.Single = parseInt(singleTable[21][i+1])
-			group.v.Full = parseInt(fullTable[21][i+1])
-			group.v.PopSize = group.popSize
-		}
+	for i, group := range []struct {
+		v       *Vacced
+		popSize int
+	}{
+		{&report.VaccedByAge._80Plus, 2_834_024},
+		{&report.VaccedByAge._70_79, 3_960_045},
+		{&report.VaccedByAge._60_69, 5_336_986},
+		{&report.VaccedByAge._50_59, 7_033_306},
+		{&report.VaccedByAge._40_49, 7_891_737},
+		{&report.VaccedByAge._25_39, 8_814_376},
+		{&report.VaccedByAge._18_24, 3_310_299},
+		{&report.VaccedByAge._16_17, 949_049},
+	} {
+		width := 2
+		i := i * width
+		group.v.Single = parseInt(singleTable[21][i+1])
+		group.v.Full = parseInt(fullTable[21][i+1])
+		group.v.PopSize = group.popSize
 	}
 
 	return nil
@@ -335,7 +323,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		fmtPct(nextPct.Single, 2),
 	)
 
-	fmt.Fprintf(&msg, "\n%% por grupos de edad (al menos una dosis):\n\n")
+	fmt.Fprintf(&msg, "\n%% por grupos de edad (completa / al menos una dosis):\n\n")
 
 	for _, c := range []struct {
 		title string
