@@ -81,9 +81,10 @@ func scrap() (err error) {
 	for _, c := range []struct {
 		contents []byte
 		report   *vaccReport
+		old      bool
 	}{
-		{lastContents, &lastReport},
-		{nextContents, &nextReport},
+		{lastContents, &lastReport, false},
+		{nextContents, &nextReport, false},
 	} {
 		odfile, err := ods.NewReader(bytes.NewReader(c.contents), int64(len(c.contents)))
 		if err != nil {
@@ -94,7 +95,7 @@ func scrap() (err error) {
 		if err != nil {
 			return fmt.Errorf("parsing ODS: %w", err)
 		}
-		extractReport(&doc, c.report)
+		extractReport(&doc, c.report, c.old)
 	}
 
 	log.Println("Handling update:", nextName)
@@ -172,7 +173,7 @@ func fetchReport(name string) ([]byte, bool, error) {
 	return contents, true, nil
 }
 
-func extractReport(doc *ods.Doc, report *vaccReport) error {
+func extractReport(doc *ods.Doc, report *vaccReport, old bool) error {
 	{
 		totalTable := doc.Table[0].Strings()
 
@@ -192,26 +193,44 @@ func extractReport(doc *ods.Doc, report *vaccReport) error {
 		report.Doses.Given = parseInt(totals[6])
 	}
 
-	singleTable := doc.Table[3].Strings()
-	fullTable := doc.Table[4].Strings()
+	tableOffset := 0
+	if old {
+		tableOffset = 1
+	}
+	singleTable := doc.Table[2+tableOffset].Strings()
+	fullTable := doc.Table[3+tableOffset].Strings()
 
-	assert(singleTable[0][23] == "Total Población INE Población a Vacunar (1)")
-	assert(fullTable[0][23] == "Total Población INE Población a Vacunar (1)")
+	totalPopCol := 18
+	if old {
+		totalPopCol = 23
+	}
+	assert(singleTable[0][totalPopCol] == "Total Población INE Población a Vacunar (1)")
+	assert(fullTable[0][totalPopCol] == "Total Población INE Población a Vacunar (1)")
 	report.TotalVacced.PopSize = 47_431_256 // INE 2020
 
-	for i, group := range []*Vacced{
-		&report.VaccedByAge._80Plus,
-		&report.VaccedByAge._70_79,
-		&report.VaccedByAge._60_69,
-		&report.VaccedByAge._50_59,
-		&report.VaccedByAge._25_49,
-		&report.VaccedByAge._18_24,
-		&report.VaccedByAge._16_17,
-	} {
-		i := i * 3
-		group.Single = parseInt(singleTable[21][i+1])
-		group.Full = parseInt(fullTable[21][i+1])
-		group.PopSize = parseInt(singleTable[21][i+2])
+	if !old {
+		for i, group := range []struct {
+			v       *Vacced
+			popSize int
+		}{
+			{&report.VaccedByAge._80Plus, 2_834_024},
+			{&report.VaccedByAge._70_79, 3_960_045},
+			{&report.VaccedByAge._60_69, 5_336_986},
+			{&report.VaccedByAge._50_59, 7_033_306},
+			{&report.VaccedByAge._40_49, 7_891_737},
+			{&report.VaccedByAge._25_39, 8_814_376},
+			{&report.VaccedByAge._18_24, 3_310_299},
+			{&report.VaccedByAge._16_17, 949_049},
+		} {
+			width := 2
+			if old {
+				width = 3
+			}
+			i := i * width
+			group.v.Single = parseInt(singleTable[21][i+1])
+			group.v.Full = parseInt(fullTable[21][i+1])
+			group.v.PopSize = group.popSize
+		}
 	}
 
 	return nil
@@ -231,7 +250,8 @@ type VaccedByAge struct {
 	_70_79  Vacced
 	_60_69  Vacced
 	_50_59  Vacced
-	_25_49  Vacced
+	_40_49  Vacced
+	_25_39  Vacced
 	_18_24  Vacced
 	_16_17  Vacced
 }
@@ -243,7 +263,8 @@ func (v VaccedByAge) Total() Vacced {
 		v._70_79,
 		v._60_69,
 		v._50_59,
-		v._25_49,
+		v._40_49,
+		v._25_39,
 		v._18_24,
 		v._16_17,
 	} {
@@ -314,7 +335,7 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		fmtPct(nextPct.Single, 2),
 	)
 
-	fmt.Fprintf(&msg, "\n%% por grupos de edad (completa / al menos una dosis):\n\n")
+	fmt.Fprintf(&msg, "\n%% por grupos de edad (al menos una dosis):\n\n")
 
 	for _, c := range []struct {
 		title string
@@ -324,7 +345,8 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		{"70-79", nextReport.VaccedByAge._70_79},
 		{"60-69", nextReport.VaccedByAge._60_69},
 		{"50-59", nextReport.VaccedByAge._50_59},
-		{"25-49", nextReport.VaccedByAge._25_49},
+		{"40-49", nextReport.VaccedByAge._40_49},
+		{"25-39", nextReport.VaccedByAge._25_39},
 		{"18-24", nextReport.VaccedByAge._18_24},
 		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
@@ -399,7 +421,8 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		{"7x", nextReport.VaccedByAge._70_79},
 		{"6x", nextReport.VaccedByAge._60_69},
 		{"5x", nextReport.VaccedByAge._50_59},
-		{"25-49", nextReport.VaccedByAge._25_49},
+		{"4x", nextReport.VaccedByAge._40_49},
+		{"25-39", nextReport.VaccedByAge._25_39},
 		{"18-24", nextReport.VaccedByAge._18_24},
 		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
