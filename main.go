@@ -399,7 +399,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 	tweets = append(tweets, msg.String())
 	msg = strings.Builder{}
 
-	fmt.Fprintf(&msg, "%% por edad (💉💉/💉):\n\n")
+	fmt.Fprintf(&msg, "Por edad (💉💉/💉 %%):\n\n")
 
 	for _, c := range []struct {
 		title string
@@ -415,7 +415,7 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		{"16-17", nextReport.VaccedByAge._16_17},
 	} {
 		pct := c.v.Pct()
-		fmt.Fprintf(&msg, "%s %s (%s/%s %%)\n",
+		fmt.Fprintf(&msg, "%s %s %s/%s\n",
 			progressBar(10, pct.Full, pct.Single-pct.Full),
 			c.title,
 			fmtFloat(pct.Full, 0),
