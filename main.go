@@ -81,9 +81,14 @@ func scrap() (err error) {
 	for _, c := range []struct {
 		contents []byte
 		report   *vaccReport
+		cfg      extractConfig
 	}{
-		{lastContents, &lastReport},
-		{nextContents, &nextReport},
+		{lastContents, &lastReport, extractConfig{
+			totalRow: 21,
+		}},
+		{nextContents, &nextReport, extractConfig{
+			totalRow: 22,
+		}},
 	} {
 		odfile, err := ods.NewReader(bytes.NewReader(c.contents), int64(len(c.contents)))
 		if err != nil {
@@ -94,7 +99,7 @@ func scrap() (err error) {
 		if err != nil {
 			return fmt.Errorf("parsing ODS: %w", err)
 		}
-		extractReport(&doc, c.report)
+		c.cfg.extractReport(&doc, c.report)
 	}
 
 	log.Println("Handling update:", nextName)
@@ -172,7 +177,11 @@ func fetchReport(name string) ([]byte, bool, error) {
 	return contents, true, nil
 }
 
-func extractReport(doc *ods.Doc, report *vaccReport) error {
+type extractConfig struct {
+	totalRow int
+}
+
+func (cfg extractConfig) extractReport(doc *ods.Doc, report *vaccReport) error {
 	{
 		totalTable := doc.Table[0].Strings()
 
@@ -182,7 +191,7 @@ func extractReport(doc *ods.Doc, report *vaccReport) error {
 		assert(header[5] == "Total Dosis entregadas (1)")
 		assert(header[6] == "Dosis administradas (2)")
 
-		totals := totalTable[21]
+		totals := totalTable[cfg.totalRow]
 		assert(totals[0] == "Totales")
 
 		report.TotalVacced.Single = parseInt(totals[8])
@@ -216,8 +225,8 @@ func extractReport(doc *ods.Doc, report *vaccReport) error {
 	} {
 		width := 2
 		i := i * width
-		group.v.Single = parseInt(singleTable[21][i+1])
-		group.v.Full = parseInt(fullTable[21][i+1])
+		group.v.Single = parseInt(singleTable[cfg.totalRow][i+1])
+		group.v.Full = parseInt(fullTable[cfg.totalRow][i+1])
 		group.v.PopSize = group.popSize
 	}
 
