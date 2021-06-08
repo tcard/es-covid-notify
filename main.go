@@ -77,18 +77,18 @@ func scrap() (err error) {
 		return fmt.Errorf("reading last report: %w", err)
 	}
 
+	baseCfg := extractConfig{
+		totalRow: 21,
+	}
+
 	var lastReport, nextReport vaccReport
 	for _, c := range []struct {
 		contents []byte
 		report   *vaccReport
 		cfg      extractConfig
 	}{
-		{lastContents, &lastReport, extractConfig{
-			totalRow: 21,
-		}},
-		{nextContents, &nextReport, extractConfig{
-			totalRow: 22,
-		}},
+		{lastContents, &lastReport, baseCfg},
+		{nextContents, &nextReport, baseCfg},
 	} {
 		odfile, err := ods.NewReader(bytes.NewReader(c.contents), int64(len(c.contents)))
 		if err != nil {
