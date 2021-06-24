@@ -309,30 +309,27 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "<strong>%s</strong> dosis puestas (total: %s; %s de entregadas)\n",
+	fmt.Fprintf(&msg, "Dosis puestas: <strong>%s</strong> | Total: %s\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.Doses.Given-lastReport.Doses.Given), 1)),
 		fmtFloat(float64(nextReport.Doses.Given), 3),
-		fmtPct(intPct(nextReport.Doses.Given, nextReport.Doses.Available), 2),
-	)
-	fmt.Fprintf(&msg, "%s entregadas (total: %s)\n",
-		fmtIncr(fmtFloat(float64(nextReport.Doses.Available-lastReport.Doses.Available), 1)),
-		fmtFloat(float64(nextReport.Doses.Available), 3),
 	)
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "Pauta completa: <strong>%s</strong>; %s (total: <strong>%s</strong>)\n",
+	fmt.Fprintf(&msg, "<strong>💉💉 Pauta completa</strong>\n<strong>%s</strong> (%s pob.)\nTotal: <strong>%s</strong> (%s pob.)\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
 		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
+		fmtFloat(float64(nextReport.TotalVacced.Full), 3),
 		fmtPct(nextPct.Full, 2),
 	)
-	fmt.Fprintf(&msg, "Al menos una dosis: %s; %s (total: %s)\n",
+	fmt.Fprintf(&msg, "<strong>💉 Al menos una dosis</strong>\n<strong>%s</strong> (%s pob.)\nTotal: <strong>%s</strong> (%s pob.)\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
 		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
+		fmtFloat(float64(nextReport.TotalVacced.Single), 3),
 		fmtPct(nextPct.Single, 2),
 	)
 
-	fmt.Fprintf(&msg, "\n%% por grupos de edad (completa / al menos una dosis):\n\n")
+	fmt.Fprintf(&msg, "\n%% por grupos de edad (💉💉 completa / 💉 al menos una dosis):\n\n")
 
 	for _, c := range []struct {
 		title string
@@ -385,23 +382,20 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 
 	fmt.Fprintln(&msg)
 
-	fmt.Fprintf(&msg, "%s puestas (total: %s; %s de entregadas)\n",
+	fmt.Fprintf(&msg, "Puestas: %s | Total: %s\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.Doses.Given-lastReport.Doses.Given), 1)),
 		fmtFloat(float64(nextReport.Doses.Given), 3),
-		fmtPct(intPct(nextReport.Doses.Given, nextReport.Doses.Available), 2),
 	)
-	fmt.Fprintf(&msg, "%s entregadas (total: %s)\n",
-		fmtIncr(fmtFloat(float64(nextReport.Doses.Available-lastReport.Doses.Available), 1)),
-		fmtFloat(float64(nextReport.Doses.Available), 3),
-	)
-	fmt.Fprintf(&msg, "Pauta completa: %s; %s (total: %s)\n",
+	fmt.Fprintf(&msg, "💉💉 Pauta completa\n%s (%s pob.)\nTotal: %s (%s pob.)\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
 		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
+		fmtFloat(float64(nextReport.TotalVacced.Full), 3),
 		fmtPct(nextPct.Full, 2),
 	)
-	fmt.Fprintf(&msg, "Al menos una: %s; %s (total: %s)\n",
+	fmt.Fprintf(&msg, "💉 Al menos una dosis\n%s (%s pob.)\nTotal: %s (%s pob.)",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
 		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
+		fmtFloat(float64(nextReport.TotalVacced.Single), 3),
 		fmtPct(nextPct.Single, 2),
 	)
 
