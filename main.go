@@ -219,9 +219,9 @@ func (cfg extractConfig) extractReport(doc *ods.Doc, report *vaccReport) error {
 		{&report.VaccedByAge._60_69, 5_336_986},
 		{&report.VaccedByAge._50_59, 7_033_306},
 		{&report.VaccedByAge._40_49, 7_891_737},
-		{&report.VaccedByAge._25_39, 8_814_376},
-		{&report.VaccedByAge._18_24, 3_310_299},
-		{&report.VaccedByAge._16_17, 949_049},
+		{&report.VaccedByAge._30_39, 6_230_403},
+		{&report.VaccedByAge._20_29, 4_944_640},
+		{&report.VaccedByAge._12_19, 3_888_686},
 	} {
 		width := 2
 		i := i * width
@@ -248,9 +248,9 @@ type VaccedByAge struct {
 	_60_69  Vacced
 	_50_59  Vacced
 	_40_49  Vacced
-	_25_39  Vacced
-	_18_24  Vacced
-	_16_17  Vacced
+	_30_39  Vacced
+	_20_29  Vacced
+	_12_19  Vacced
 }
 
 func (v VaccedByAge) Total() Vacced {
@@ -261,9 +261,9 @@ func (v VaccedByAge) Total() Vacced {
 		v._60_69,
 		v._50_59,
 		v._40_49,
-		v._25_39,
-		v._18_24,
-		v._16_17,
+		v._30_39,
+		v._20_29,
+		v._12_19,
 	} {
 		t.PopSize += v.PopSize
 		t.Single += v.Single
@@ -343,9 +343,9 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		{"60-69", nextReport.VaccedByAge._60_69},
 		{"50-59", nextReport.VaccedByAge._50_59},
 		{"40-49", nextReport.VaccedByAge._40_49},
-		{"25-39", nextReport.VaccedByAge._25_39},
-		{"18-24", nextReport.VaccedByAge._18_24},
-		{"16-17", nextReport.VaccedByAge._16_17},
+		{"30-39", nextReport.VaccedByAge._30_39},
+		{"20-29", nextReport.VaccedByAge._20_29},
+		{"12-19", nextReport.VaccedByAge._12_19},
 	} {
 		pct := c.v.Pct()
 		fmt.Fprintf(&msg, "<pre>%s %s (%s / %s)</pre>\n",
@@ -419,9 +419,9 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		{"6x", nextReport.VaccedByAge._60_69},
 		{"5x", nextReport.VaccedByAge._50_59},
 		{"4x", nextReport.VaccedByAge._40_49},
-		{"25-39", nextReport.VaccedByAge._25_39},
-		{"18-24", nextReport.VaccedByAge._18_24},
-		{"16-17", nextReport.VaccedByAge._16_17},
+		{"3x", nextReport.VaccedByAge._30_39},
+		{"2x", nextReport.VaccedByAge._20_29},
+		{"12-19", nextReport.VaccedByAge._12_19},
 	} {
 		pct := c.v.Pct()
 		fmt.Fprintf(&msg, "%s %s %s/%s\n",
