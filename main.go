@@ -78,7 +78,7 @@ func scrap() (err error) {
 	}
 
 	baseCfg := extractConfig{
-		totalRow: 21,
+		totalRow: 22,
 	}
 
 	var lastReport, nextReport vaccReport
