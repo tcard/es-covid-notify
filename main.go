@@ -526,9 +526,11 @@ func progressBar(width int, pcts ...float64) string {
 
 	var bar strings.Builder
 	var cells int
+	var pctDone float64
 
 	for i, pct := range pcts {
-		pctCells := int(math.Round(pct * s))
+		pctDone += pct
+		pctCells := int(math.Round(pctDone*s)) - cells
 
 		cells += pctCells
 		if cells > width {
