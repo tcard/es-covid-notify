@@ -322,8 +322,8 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		nextPct.Single-nextPct.Full,
 	))
 	fmt.Fprintf(&msg, "<strong>💉💉 %s | 💉 %s</strong>\n",
-		fmtPct(nextPct.Full, 2),
-		fmtPct(nextPct.Single, 2),
+		fmtPct(nextPct.Full, 1),
+		fmtPct(nextPct.Single, 1),
 	)
 
 	fmt.Fprintln(&msg)
@@ -339,13 +339,13 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
 		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
 		fmtFloat(float64(nextReport.TotalVacced.Full), 3),
-		fmtPct(nextPct.Full, 2),
+		fmtPct(nextPct.Full, 1),
 	)
 	fmt.Fprintf(&msg, "<strong>💉 Al menos una dosis</strong>\n<strong>%s</strong> (%s pob.)\nTotal: <strong>%s</strong> (%s pob.)\n\n",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
 		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
 		fmtFloat(float64(nextReport.TotalVacced.Single), 3),
-		fmtPct(nextPct.Single, 2),
+		fmtPct(nextPct.Single, 1),
 	)
 
 	fmt.Fprintf(&msg, "\n%% por grupos de edad (💉💉 completa / 💉 al menos una dosis):\n\n")
@@ -375,8 +375,8 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 			c.title,
 			progressBar(ageWidth, pct.Full, pct.Single-pct.Full),
 			strings.Repeat(" ", maxWidth-ageWidth),
-			fmtPct(pct.Full, 2),
-			fmtPct(pct.Single, 2),
+			fmtPct(pct.Full, 1),
+			fmtPct(pct.Single, 1),
 		)
 	}
 
@@ -403,8 +403,8 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		nextPct.Single-nextPct.Full,
 	))
 	fmt.Fprintf(&msg, "💉💉 %s | 💉 %s\n",
-		fmtPct(nextPct.Full, 2),
-		fmtPct(nextPct.Single, 2),
+		fmtPct(nextPct.Full, 1),
+		fmtPct(nextPct.Single, 1),
 	)
 
 	fmt.Fprintln(&msg)
@@ -417,13 +417,13 @@ func postToTwitter(lastReport, nextReport *vaccReport) error {
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Full-lastReport.TotalVacced.Full), 1)),
 		fmtIncr(fmtPct(nextPct.Full-lastPct.Full, 1)),
 		fmtFloat(float64(nextReport.TotalVacced.Full), 3),
-		fmtPct(nextPct.Full, 2),
+		fmtPct(nextPct.Full, 1),
 	)
 	fmt.Fprintf(&msg, "💉 Al menos una dosis\n%s (%s pob.)\nTotal: %s (%s pob.)",
 		fmtIncr(fmtFloat(float64(nextReport.TotalVacced.Single-lastReport.TotalVacced.Single), 1)),
 		fmtIncr(fmtPct(nextPct.Single-lastPct.Single, 1)),
 		fmtFloat(float64(nextReport.TotalVacced.Single), 3),
-		fmtPct(nextPct.Single, 2),
+		fmtPct(nextPct.Single, 1),
 	)
 
 	tweets = append(tweets, msg.String())
