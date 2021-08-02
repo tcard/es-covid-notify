@@ -272,6 +272,25 @@ func (v VaccedByAge) Total() Vacced {
 	return t
 }
 
+func (v VaccedByAge) MaxPopSize() int {
+	var max int
+	for _, v := range []Vacced{
+		v._80Plus,
+		v._70_79,
+		v._60_69,
+		v._50_59,
+		v._40_49,
+		v._30_39,
+		v._20_29,
+		v._12_19,
+	} {
+		if v.PopSize > max {
+			max = v.PopSize
+		}
+	}
+	return max
+}
+
 type Vacced struct {
 	PopSize int
 	Single  int
@@ -345,9 +364,17 @@ func postToTelegram(lastReport, nextReport *vaccReport) error {
 		{"12-19", nextReport.VaccedByAge._12_19},
 	} {
 		pct := c.v.Pct()
-		fmt.Fprintf(&msg, "<pre>%s %s (%s / %s)</pre>\n",
+
+		const maxWidth = 20
+		ageWidth := int(math.Round(
+			float64(c.v.PopSize*maxWidth) /
+				float64(nextReport.VaccedByAge.MaxPopSize()),
+		))
+
+		fmt.Fprintf(&msg, "<pre>%s %s%s (%s / %s)</pre>\n",
 			c.title,
-			progressBar(20, pct.Full, pct.Single-pct.Full),
+			progressBar(ageWidth, pct.Full, pct.Single-pct.Full),
+			strings.Repeat(" ", maxWidth-ageWidth),
 			fmtPct(pct.Full, 2),
 			fmtPct(pct.Single, 2),
 		)
