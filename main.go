@@ -52,7 +52,10 @@ func scrap() (err error) {
 	}
 	sort.Strings(names)
 
-	lastName := names[len(names)-1]
+	lastName := ""
+	if len(names) > 0 {
+		lastName = names[len(names)-1]
+	}
 
 	nextName, err := fetchCurrentName()
 	if err != nil {
@@ -70,6 +73,15 @@ func scrap() (err error) {
 	if !ok {
 		log.Printf("No report yet: %s", nextName)
 		return nil
+	}
+
+	if lastName == "" {
+		lastName = nextName
+
+		err = os.WriteFile("reports/vaccination/"+lastName, nextContents, 0644)
+		if err != nil {
+			return fmt.Errorf("creating %s: %w", lastName, err)
+		}
 	}
 
 	lastContents, err := fs.ReadFile(dir, lastName)
