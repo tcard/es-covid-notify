@@ -52,7 +52,10 @@ func scrap() (err error) {
 	}
 	sort.Strings(names)
 
-	lastName := names[len(names)-1]
+	lastName := ""
+	if len(names) > 0 {
+		lastName = names[len(names)-1]
+	}
 
 	nextName, err := fetchCurrentName()
 	if err != nil {
@@ -72,9 +75,14 @@ func scrap() (err error) {
 		return nil
 	}
 
-	lastContents, err := fs.ReadFile(dir, lastName)
-	if err != nil {
-		return fmt.Errorf("reading last report: %w", err)
+	var lastContents []byte
+	if lastName == "" {
+		lastContents = nextContents
+	} else {
+		lastContents, err = fs.ReadFile(dir, lastName)
+		if err != nil {
+			return fmt.Errorf("reading last report: %w", err)
+		}
 	}
 
 	baseCfg := extractConfig{
@@ -186,19 +194,34 @@ func (cfg extractConfig) extractReport(doc *ods.Doc, report *vaccReport) error {
 		totalTable := doc.Table[0].Strings()
 
 		header := totalTable[0]
-		assert(header[8] == "Nº Personas con al menos 1 dosis")
-		assert(header[9] == "Nº Personas vacunadas\n(pauta completada)")
-		assert(header[5] == "Total Dosis entregadas (1)")
-		assert(header[6] == "Dosis administradas (2)")
-
 		totals := totalTable[cfg.totalRow]
 		assert(totals[0] == "Totales")
 
-		report.TotalVacced.Single = parseInt(totals[8])
-		report.TotalVacced.Full = parseInt(totals[9])
+		for index, currentTitle := range header {
+			if currentTitle == "Nº Personas con al menos 1 dosis" {
+				report.TotalVacced.Single = parseInt(totals[index])
+				continue
+			}
 
-		report.Doses.Available = parseInt(totals[5])
-		report.Doses.Given = parseInt(totals[6])
+			if currentTitle == "Nº Personas vacunadas\n(pauta completada)" {
+				report.TotalVacced.Full = parseInt(totals[index])
+				continue
+			}
+
+			if currentTitle == "Total Dosis entregadas (1)" {
+				report.Doses.Available = parseInt(totals[index])
+				continue
+			}
+
+			if currentTitle == "Dosis administradas (2)" {
+				report.Doses.Given = parseInt(totals[index])
+			}
+		}
+
+		assert(report.TotalVacced.Single > 0)
+		assert(report.TotalVacced.Full > 0)
+		assert(report.Doses.Available > 0)
+		assert(report.Doses.Given > 0)
 	}
 
 	tableOffset := 0
